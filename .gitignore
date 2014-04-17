@@ -1,0 +1,5 @@
+*.lock
+.librarian/
+modules/
+.tmp/
+.vagrant/
