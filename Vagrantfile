@@ -10,6 +10,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 
   config.vm.provision "shell", inline: "sudo apt-get install -y puppet-common"
   config.librarian_puppet.puppetfile_dir = '.'
+  config.librarian_puppet.placeholder_filename = ".gitkeep"
   config.vm.provision "puppet" do |puppet|
     puppet.module_path = "modules"
     puppet.manifest_file = "init.pp"
