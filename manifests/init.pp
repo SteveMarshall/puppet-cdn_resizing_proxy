@@ -27,7 +27,7 @@ class cdn_origin (
         use_default_location => false,
         index_files          => [],
     }
-    nginx::resource::location { '~* ^/d/(.+)$':
+    nginx::resource::location { '~* ^/info/(.+)$':
         vhost               => $vhost,
         proxy               => 'http://127.0.0.1/$1',
         location_cfg_append => {
@@ -46,7 +46,7 @@ class cdn_origin (
             image_filter_buffer => '5M',
         }
     }
-    nginx::resource::location { '~* ^/o/(.+)$':
+    nginx::resource::location { '~* ^/orig/(.+)$':
         vhost               => $vhost,
         proxy               =>
             "${proxy_protocol}://${proxy_host}:${proxy_port}/\
