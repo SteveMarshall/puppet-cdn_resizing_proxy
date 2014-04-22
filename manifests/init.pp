@@ -11,7 +11,7 @@
 #                       proxy host.
 # [*resolver*]        - Domain name servers to use to resolve the
 #                       proxy hostname.
-class cdn_origin (
+class cdn_resizing_proxy (
     $vhost           = undef,
     $proxy_protocol  = undef,
     $proxy_host      = undef,
@@ -60,7 +60,7 @@ ${proxy_base_path}\$1",
     }
 }
 
-class {'cdn_origin':
+class {'cdn_resizing_proxy':
     vhost           => 'cdn-origin.tizaro.com',
     proxy_protocol  => 'http',
     proxy_host      => 's3-eu-west-1.amazonaws.com',
