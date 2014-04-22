@@ -38,7 +38,7 @@ class cdn_resizing_proxy (
     }
     nginx::resource::location { '~* ^/([\d\-]+)px/(.+)$':
         vhost               => $vhost,
-        proxy               => 'http://127.0.0.1/o/$2',
+        proxy               => 'http://127.0.0.1/orig/$2',
         location_cfg_append => {
             image_filter        => {
                 resize => '$1 $1',
