@@ -4,9 +4,9 @@
 # === Parameters
 #
 # [*vhost*]           - Defines the default vHost for the proxy to serve on.
+# [*proxy_protocol*]  - Protocol to use to connect to the proxy host.
 # [*proxy_host*]      - Proxy server for the root location to connect to.
 # [*proxy_port*]      - Port on which to connect to the proxy host.
-# [*proxy_protocol*]  - Protocol to use to connect to the proxy host.
 # [*proxy_base_path*] - Path fragment to prepend to all requests to the
 #                       proxy host.
 # [*resolver*]        - Domain name servers to use to resolve the
@@ -16,8 +16,8 @@ class cdn_resizing_proxy (
     $proxy_protocol  = undef,
     $proxy_host      = undef,
     $proxy_port      = 80,
-    $resolver        = '8.8.8.8',
     $proxy_base_path = undef,
+    $resolver        = '8.8.8.8',
 ) {
     class { 'nginx':
         manage_repo => false,
@@ -27,6 +27,9 @@ class cdn_resizing_proxy (
         use_default_location => false,
         index_files          => [],
     }
+    # Matches /info/[image_path]
+    # Returns a JSON response with image information (height/width/type)
+    # for the proxied URL (one of the other locations below)
     nginx::resource::location { '~* ^/info/(.+)$':
         vhost               => $vhost,
         proxy               => 'http://127.0.0.1/$1',
@@ -36,6 +39,9 @@ class cdn_resizing_proxy (
             },
         }
     }
+    # Matches /[size]px/[image_path]
+    # Resizes the original image so its longest side is $1px
+    # This will fail if the original image is larger than 5M
     nginx::resource::location { '~* ^/(\d+)px/(.+)$':
         vhost               => $vhost,
         proxy               => 'http://127.0.0.1/orig/$2',
@@ -46,6 +52,8 @@ class cdn_resizing_proxy (
             image_filter_buffer => '5M',
         }
     }
+    # Matches /orig/[image_path]
+    # Retrieves the original image from the upstream source
     nginx::resource::location { '~* ^/orig/(.+)$':
         vhost               => $vhost,
         proxy               =>
