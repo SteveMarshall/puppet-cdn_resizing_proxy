@@ -54,11 +54,10 @@ class cdn_resizing_proxy (
     }
     # Matches /orig/[image_path]
     # Retrieves the original image from the upstream source
+    $proxy_root = "${proxy_protocol}://${proxy_host}:${proxy_port}/"
     nginx::resource::location { '~* ^/orig/(.+)$':
         vhost               => $vhost,
-        proxy               =>
-            "${proxy_protocol}://${proxy_host}:${proxy_port}/\
-${proxy_base_path}\$1",
+        proxy               => "${proxy_root}${proxy_base_path}\$1",
         location_cfg_append => {
             resolver         => $resolver,
             proxy_set_header => {
