@@ -23,9 +23,12 @@ class cdn_resizing_proxy (
     include wget
     include apt::update
 
-    $package_url = 'https://github.com/Tizaro/tizaro-nginx/releases/download/v1.6.0-1-precise%2Btizaro/nginx_1.6.0-1.precise.tizaro_amd64.deb'
-    $package_path = '/tmp/nginx_1.6.0-1.precise.tizaro_amd64.deb'
-    wget::fetch { $package_url:
+    $file_name     = 'nginx_1.6.0-1.precise.tizaro_amd64.deb'
+    $release_path  = "v1.6.0-1-precise%2Btizaro/${file_name}"
+    $releases_root = 'https://github.com/Tizaro/tizaro-nginx/releases/download/'
+
+    $package_path  = "/tmp/${file_name}"
+    wget::fetch { "${releases_root}${release_path}":
         destination => $package_path,
     }
     package { 'libmagickwand4':
@@ -41,14 +44,14 @@ class cdn_resizing_proxy (
     }
 
     file { '/etc/nginx/conf.d/default.conf':
-        ensure => absent,
+        ensure  => absent,
         require => Package['nginx'],
-        notify => Service['nginx'],
+        notify  => Service['nginx'],
     }
     file { '/etc/nginx/conf.d/example_ssl.conf':
-        ensure => absent,
+        ensure  => absent,
         require => Package['nginx'],
-        notify => Service['nginx'],
+        notify  => Service['nginx'],
     }
 
     class { 'nginx':
@@ -58,7 +61,7 @@ class cdn_resizing_proxy (
     nginx::resource::vhost { $vhost:
         use_default_location => false,
         index_files          => [],
-        vhost_cfg_prepend     => {
+        vhost_cfg_prepend    => {
             small_light => 'on',
         },
     }
@@ -69,10 +72,10 @@ class cdn_resizing_proxy (
         vhost               => $vhost,
         proxy               => 'http://127.0.0.1/$1',
         location_cfg_append => {
-            image_filter     => {
+            image_filter => {
                 size => ' ',
             },
-        }
+        },
     }
     # Matches /[size]px/[image_path]
     # Resizes the original image so its longest side is $1px
