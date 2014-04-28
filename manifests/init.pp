@@ -68,9 +68,9 @@ class cdn_resizing_proxy (
     # Matches /info/[image_path]
     # Returns a JSON response with image information (height/width/type)
     # for the proxied URL (one of the other locations below)
-    nginx::resource::location { '~* ^/info/(.+)$':
+    nginx::resource::location { '/info/':
         vhost               => $vhost,
-        proxy               => 'http://127.0.0.1/$1',
+        proxy               => 'http://127.0.0.1/',
         location_cfg_append => {
             image_filter => {
                 size => ' ',
@@ -103,9 +103,9 @@ class cdn_resizing_proxy (
     # Matches /orig/[image_path]
     # Retrieves the original image from the upstream source
     $proxy_root = "${proxy_protocol}://${proxy_host}:${proxy_port}/"
-    nginx::resource::location { '~* ^/orig/(.+)$':
+    nginx::resource::location { '/orig/':
         vhost               => $vhost,
-        proxy               => "${proxy_root}${proxy_base_path}\$1",
+        proxy               => "${proxy_root}${proxy_base_path}",
         location_cfg_append => {
             resolver         => $resolver,
             proxy_set_header => {
