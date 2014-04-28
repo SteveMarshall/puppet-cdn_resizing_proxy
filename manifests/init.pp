@@ -58,6 +58,9 @@ class cdn_resizing_proxy (
     nginx::resource::vhost { $vhost:
         use_default_location => false,
         index_files          => [],
+        vhost_cfg_prepend     => {
+            small_light => 'on',
+        },
     }
     # Matches /info/[image_path]
     # Returns a JSON response with image information (height/width/type)
@@ -84,6 +87,16 @@ class cdn_resizing_proxy (
             image_filter_buffer => '5M',
         }
     }
+
+    # Matches /small_light[params]/[image_path]
+    # Required format for ngx_small_light image processing
+    # Supported params are documented at
+    # https://github.com/cubicdaiya/ngx_small_light/wiki/Configuration
+    nginx::resource::location { '~ ^/small_light[^/]*/(.+)$':
+        vhost => $vhost,
+        proxy => 'http://127.0.0.1/orig/$1',
+    }
+
     # Matches /orig/[image_path]
     # Retrieves the original image from the upstream source
     $proxy_root = "${proxy_protocol}://${proxy_host}:${proxy_port}/"
