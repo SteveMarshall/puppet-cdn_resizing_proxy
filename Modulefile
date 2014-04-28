@@ -7,3 +7,4 @@ summary      'Install and configure a resizing proxy for use behind a CDN.'
 description  IO.read(File.join(File.dirname(__FILE__), 'README.md'))
 
 dependency   'jfryman/nginx'
+dependency   'maestrodev/wget'

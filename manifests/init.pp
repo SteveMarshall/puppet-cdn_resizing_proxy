@@ -19,6 +19,38 @@ class cdn_resizing_proxy (
     $proxy_base_path = undef,
     $resolver        = '8.8.8.8',
 ) {
+    # Install tizaro-nginx from GitHub as we don't yet have our own apt repo
+    include wget
+    include apt::update
+
+    $package_url = 'https://github.com/Tizaro/tizaro-nginx/releases/download/v1.6.0-1-precise%2Btizaro/nginx_1.6.0-1.precise.tizaro_amd64.deb'
+    $package_path = '/tmp/nginx_1.6.0-1.precise.tizaro_amd64.deb'
+    wget::fetch { $package_url:
+        destination => $package_path,
+    }
+    package { 'libmagickwand4':
+        require  => Exec['apt_update'],
+    }
+    package { 'libgd2-xpm':
+        require  => Exec['apt_update'],
+    }
+    package { 'nginx-tizaro':
+        provider => 'dpkg',
+        source   => $package_path,
+        require  => [Package['libmagickwand4'], Package['libgd2-xpm']],
+    }
+
+    file { '/etc/nginx/conf.d/default.conf':
+        ensure => absent,
+        require => Package['nginx'],
+        notify => Service['nginx'],
+    }
+    file { '/etc/nginx/conf.d/example_ssl.conf':
+        ensure => absent,
+        require => Package['nginx'],
+        notify => Service['nginx'],
+    }
+
     class { 'nginx':
         manage_repo => false,
     }
