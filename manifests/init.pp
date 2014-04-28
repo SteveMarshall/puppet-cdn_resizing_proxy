@@ -77,18 +77,49 @@ class cdn_resizing_proxy (
             },
         },
     }
-    # Matches /[size]px/[image_path]
-    # Resizes the original image so its longest side is $1px
-    # This will fail if the original image is larger than 5M
-    nginx::resource::location { '~* ^/(\d+)px/(.+)$':
-        vhost               => $vhost,
-        proxy               => 'http://127.0.0.1/orig/$2',
-        location_cfg_append => {
-            image_filter        => {
-                resize => '$1 $1',
+
+    $destination_size = "dw=\${width},dh=\${height},"
+    $canvas_size      = "cw=\${width},ch=\${height},cc=\${color}"
+    $resize_simple    = "small_light(${destination_size})"
+    $resize_pad       = "small_light(${destination_size}${canvas_size})"
+
+    # Matches /[max-width]x[max-height]/[image_path]
+    # Resizes the original image so its sides are within max-width and
+    # max-height
+    nginx::resource::location { '~* ^/(\d+)x(\d+)/(.+)$':
+        vhost                => $vhost,
+        proxy                => "http://127.0.0.1/${resize_simple}/\${orig}",
+        location_cfg_prepend => {
+            set => {
+                '$width'  => '$1',
+                '$height' => '$2',
+                '$orig'   => '$3',
             },
-            image_filter_buffer => '5M',
-        }
+        },
+    }
+
+    # Matches /[max-width]x[max-height]-pad/[image_path]
+    # Resizes the original image so its sides are within max-width and
+    # max-height, and pads the canvas with white to fill those sizes
+    nginx::resource::location { '~* ^/(\d+)x(\d+)-pad/(.+)$':
+        vhost                => $vhost,
+        proxy                => "http://127.0.0.1/\$1x\$2-pad-ffffff/\$3",
+    }
+
+    # Matches /[max-width]x[max-height]-pad-[hex-color]/[image_path]
+    # Resizes the original image so its sides are within max-width and
+    # max-height, and pads the canvas with [hex-color] to fill those sizes
+    nginx::resource::location { '~* ^/(\d+)x(\d+)-pad-([0-9a-f]+)/(.+)$':
+        vhost                => $vhost,
+        proxy                => "http://127.0.0.1/${resize_pad}/\${orig}",
+        location_cfg_prepend => {
+            set => {
+                '$width'  => '$1',
+                '$height' => '$2',
+                '$color'  => '$3',
+                '$orig'   => '$4',
+            },
+        },
     }
 
     # Matches /small_light[params]/[image_path]
