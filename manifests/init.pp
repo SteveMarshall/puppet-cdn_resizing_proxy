@@ -135,7 +135,29 @@ class cdn_resizing_proxy (
     # https://github.com/cubicdaiya/ngx_small_light/wiki/Configuration
     nginx::resource::location { '~ ^/small_light[^/]*/(.+)$':
         vhost => $vhost,
-        proxy => 'http://127.0.0.1/orig/$1',
+        proxy => 'http://127.0.0.1/$1',
+    }
+
+    # Matches /product/[tizaro-sku]_[image-number][extension]
+    # Can be used with all resizers/small_light
+    $sku   = '([A-Z0-9]{3})([A-Z0-9]{3})([A-Z0-9]{2})'
+    $image = '(\d+)'
+    $type  = '([^$]+)'
+    $sku_image_path = "\${sku_pt_1}/\${sku_pt_2}/\${sku_pt_3}/"
+    $sku_image_name = "\${sku_pt_1}\${sku_pt_2}\${sku_pt_3}_\${img}\${ext}"
+    $sku_image_fullpath = "${sku_image_path}${sku_image_name}"
+    nginx::resource::location { "~* \"^/product/${sku}_${image}${type}$\"":
+        vhost                => $vhost,
+        proxy                => "http://127.0.0.1/orig/${sku_image_fullpath}",
+        location_cfg_prepend => {
+            set => {
+                '$sku_pt_1' => '$1',
+                '$sku_pt_2' => '$2',
+                '$sku_pt_3' => '$3',
+                '$img'      => '$4',
+                '$ext'      => '$5',
+            },
+        },
     }
 
     # Matches /orig/[image_path]
