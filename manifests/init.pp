@@ -19,26 +19,30 @@ class cdn_resizing_proxy (
     $proxy_base_path = undef,
     $resolver        = '8.8.8.8',
 ) {
-    # Install tizaro-nginx from GitHub as we don't yet have our own apt repo
-    include wget
+    # Ensure apt-get update actually runs when we `require` it
+    # If we don't do this, tizaro-nginx dependencies might fail to install
     class { 'apt':
         always_apt_update => true,
     }
     include apt::update
 
-    $file_name     = 'nginx_1.6.0-1.precise.tizaro_amd64.deb'
-    $release_path  = "v1.6.0-1-precise%2Btizaro/${file_name}"
-    $releases_root = 'https://github.com/Tizaro/tizaro-nginx/releases/download/'
-
-    $package_path  = "/tmp/${file_name}"
-    wget::fetch { "${releases_root}${release_path}":
-        destination => $package_path,
-    }
+    # Install tizaro-nginx dependencies because dpkg won't do it automatically
     package { 'libmagickwand4':
         require  => Exec['apt_update'],
     }
     package { 'libgd2-xpm':
         require  => Exec['apt_update'],
+    }
+
+    # Install tizaro-nginx from GitHub as we don't yet have our own apt repo
+    $file_name     = 'nginx_1.6.0-1.precise.tizaro_amd64.deb'
+    $release_path  = "v1.6.0-1-precise%2Btizaro/${file_name}"
+    $releases_root = 'https://github.com/Tizaro/tizaro-nginx/releases/download/'
+    $package_path  = "/tmp/${file_name}"
+
+    include wget
+    wget::fetch { "${releases_root}${release_path}":
+        destination => $package_path,
     }
     package { 'nginx-tizaro':
         provider => 'dpkg',
