@@ -21,6 +21,9 @@ class cdn_resizing_proxy (
 ) {
     # Install tizaro-nginx from GitHub as we don't yet have our own apt repo
     include wget
+    class { 'apt':
+        always_apt_update => true,
+    }
     include apt::update
 
     $file_name     = 'nginx_1.6.0-1.precise.tizaro_amd64.deb'
