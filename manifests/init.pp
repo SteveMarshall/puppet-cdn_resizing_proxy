@@ -148,7 +148,7 @@ class cdn_resizing_proxy (
     $sku_image_fullpath = "${sku_image_path}${sku_image_name}"
     nginx::resource::location { "~* \"^/product/${sku}_${image}${type}$\"":
         vhost                => $vhost,
-        proxy                => "http://127.0.0.1/orig/${sku_image_fullpath}",
+        proxy                => "http://127.0.0.1/images/${sku_image_fullpath}",
         location_cfg_prepend => {
             set => {
                 '$sku_pt_1' => '$1',
@@ -160,10 +160,10 @@ class cdn_resizing_proxy (
         },
     }
 
-    # Matches /orig/[image_path]
-    # Retrieves the original image from the upstream source
+    # Matches /[path]
+    # Retrieves the original file from the upstream source
     $proxy_root = "${proxy_protocol}://${proxy_host}:${proxy_port}/"
-    nginx::resource::location { '/orig/':
+    nginx::resource::location { '/':
         vhost               => $vhost,
         proxy               => "${proxy_root}${proxy_base_path}",
         location_cfg_append => {
