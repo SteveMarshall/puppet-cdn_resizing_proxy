@@ -11,6 +11,9 @@
 #                       proxy host.
 # [*resolver*]        - Domain name servers to use to resolve the
 #                       proxy hostname.
+# [*expires*]         - Cache control and resource expiration, per the
+#                       nginx documentation:
+#            http://nginx.org/en/docs/http/ngx_http_headers_module.html#expires
 class cdn_resizing_proxy (
     $vhost           = undef,
     $proxy_protocol  = undef,
@@ -18,6 +21,7 @@ class cdn_resizing_proxy (
     $proxy_port      = 80,
     $proxy_base_path = undef,
     $resolver        = '8.8.8.8',
+    $expires         = 'max'
 ) {
     # Ensure apt-get update actually runs when we `require` it
     # If we don't do this, tizaro-nginx dependencies might fail to install
@@ -70,6 +74,7 @@ class cdn_resizing_proxy (
         index_files          => [],
         vhost_cfg_prepend    => {
             small_light => 'on',
+            expires     => $expires,
         },
     }
     # Matches /info/[image_path]
