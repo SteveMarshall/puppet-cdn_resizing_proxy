@@ -181,8 +181,9 @@ class cdn_resizing_proxy (
 }
 
 class {'cdn_resizing_proxy':
-    vhost           => 'cdn-origin.tizaro.com',
-    proxy_protocol  => 'http',
+    vhost           => 'resizer.cdn.tizaro.com',
+    proxy_protocol  => 'https',
+    proxy_port      => '443',
     proxy_host      => 's3-eu-west-1.amazonaws.com',
-    proxy_base_path => 'consumed.tizarobot.tizaro.com/',
+    proxy_base_path => 'origin-1.cdn.tizaro.com/',
 }
