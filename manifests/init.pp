@@ -95,10 +95,10 @@ class cdn_resizing_proxy (
     $resize_simple    = "small_light(${destination_size})"
     $resize_pad       = "small_light(${destination_size}${canvas_size})"
 
-    # Matches /[max-width]x[max-height]/[image_path]
+    # Matches /[max-width]x[max-height]-max/[image_path]
     # Resizes the original image so its sides are within max-width and
     # max-height
-    nginx::resource::location { '~* ^/(\d+)x(\d+)/(.+)$':
+    nginx::resource::location { '~* ^/(\d+)x(\d+)-max/(.+)$':
         vhost                => $vhost,
         proxy                => "http://127.0.0.1/${resize_simple}/\${orig}",
         location_cfg_prepend => {
