@@ -95,7 +95,7 @@ class cdn_resizing_proxy (
     # Matches /[max-width]x[max-height]-max/[image_path]
     # Resizes the original image so its sides are within max-width and
     # max-height
-    nginx::resource::location { '~* ^/(\d+)x(\d+)-max/(.+)$':
+    nginx::resource::location { '~* ^/(-|\d+)x(-|\d+)-max/(.+)$':
         vhost                => $vhost,
         proxy                => "http://127.0.0.1/${resize}/\${orig}",
         location_cfg_prepend => {
