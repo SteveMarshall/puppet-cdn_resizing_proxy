@@ -6,7 +6,6 @@
 # [*vhost*]           - Defines the default vHost for the proxy to serve on.
 # [*proxy_protocol*]  - Protocol to use to connect to the proxy host.
 # [*proxy_host*]      - Proxy server for the root location to connect to.
-# [*proxy_port*]      - Port on which to connect to the proxy host.
 # [*proxy_base_path*] - Path fragment to prepend to all requests to the
 #                       proxy host.
 # [*resolver*]        - Domain name servers to use to resolve the
@@ -18,7 +17,6 @@ class cdn_resizing_proxy (
     $vhost           = undef,
     $proxy_protocol  = undef,
     $proxy_host      = undef,
-    $proxy_port      = 80,
     $proxy_base_path = undef,
     $resolver        = '8.8.8.8',
     $expires         = 'max'
@@ -75,8 +73,10 @@ class cdn_resizing_proxy (
         vhost_cfg_prepend    => {
             small_light => 'on',
             expires     => $expires,
+            resolver    => $resolver,
         },
     }
+
     # Matches /info/[image_path]
     # Returns a JSON response with image information (height/width/type)
     # for the proxied URL (one of the other locations below)
@@ -167,12 +167,11 @@ class cdn_resizing_proxy (
 
     # Matches /[path]
     # Retrieves the original file from the upstream source
-    $proxy_root = "${proxy_protocol}://${proxy_host}:${proxy_port}/"
+    $proxy_root = "${proxy_protocol}://${proxy_host}/"
     nginx::resource::location { '/':
         vhost               => $vhost,
         proxy               => "${proxy_root}${proxy_base_path}",
         location_cfg_append => {
-            resolver         => $resolver,
             proxy_set_header => {
                 'Host' => $proxy_host,
             },
@@ -183,7 +182,6 @@ class cdn_resizing_proxy (
 class {'cdn_resizing_proxy':
     vhost           => 'resizer.cdn.tizaro.com',
     proxy_protocol  => 'https',
-    proxy_port      => '443',
     proxy_host      => 's3-eu-west-1.amazonaws.com',
     proxy_base_path => 'origin-1.cdn.tizaro.com/',
 }
