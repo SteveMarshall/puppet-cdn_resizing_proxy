@@ -37,8 +37,8 @@ class cdn_resizing_proxy (
     }
 
     # Install tizaro-nginx from GitHub as we don't yet have our own apt repo
-    $file_name     = 'nginx_1.6.0-1.precise.tizaro_amd64.deb'
-    $release_path  = "v1.6.0-1-precise%2Btizaro/${file_name}"
+    $file_name     = 'nginx_1.6.0-1.precise.tizaro-1_amd64.deb'
+    $release_path  = "v1.6.0-1-precise%2Btizaro-1/${file_name}"
     $releases_root = 'https://github.com/Tizaro/tizaro-nginx/releases/download/'
     $package_path  = "/tmp/${file_name}"
 
@@ -92,8 +92,8 @@ class cdn_resizing_proxy (
 
     $destination_size = "dw=\${width},dh=\${height},"
     $canvas_size      = "cw=\${width},ch=\${height},cc=\${color}"
-    $resize_simple    = "small_light(${destination_size})"
-    $resize_pad       = "small_light(${destination_size}${canvas_size})"
+    $resize_simple    = "small_light(e=gd,${destination_size})"
+    $resize_pad       = "small_light(e=gd,${destination_size}${canvas_size})"
 
     # Matches /[max-width]x[max-height]-max/[image_path]
     # Resizes the original image so its sides are within max-width and
@@ -115,10 +115,12 @@ class cdn_resizing_proxy (
     # max-height, and pads the canvas with white to fill those sizes
     nginx::resource::location { '~* ^/(\d+)x(\d+)-pad/(.+)$':
         vhost                => $vhost,
-        proxy                => "http://127.0.0.1/\$1x\$2-pad-ffffff/\$3",
+        proxy                => "http://127.0.0.1/\$1x\$2-pad-ffffff00/\$3",
     }
 
     # Matches /[max-width]x[max-height]-pad-[hex-color]/[image_path]
+    # NOTE: hex-color needs inverted alpha because of a bug in small_light+gd
+    #       https://github.com/cubicdaiya/ngx_small_light/issues/9
     # Resizes the original image so its sides are within max-width and
     # max-height, and pads the canvas with [hex-color] to fill those sizes
     nginx::resource::location { '~* ^/(\d+)x(\d+)-pad-([0-9a-f]+)/(.+)$':
