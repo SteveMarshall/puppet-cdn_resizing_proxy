@@ -90,21 +90,18 @@ class cdn_resizing_proxy (
         },
     }
 
-    $destination_size = "dw=\${width},dh=\${height},"
-    $canvas_size      = "cw=\${width},ch=\${height},cc=\${color}"
-    $resize_simple    = "small_light(e=gd,${destination_size})"
-    $resize_pad       = "small_light(e=gd,${destination_size}${canvas_size})"
+    $resize = 'small_light(e=gd,$width,$height,$color)'
 
     # Matches /[max-width]x[max-height]-max/[image_path]
     # Resizes the original image so its sides are within max-width and
     # max-height
     nginx::resource::location { '~* ^/(\d+)x(\d+)-max/(.+)$':
         vhost                => $vhost,
-        proxy                => "http://127.0.0.1/${resize_simple}/\${orig}",
+        proxy                => "http://127.0.0.1/${resize}/\${orig}",
         location_cfg_prepend => {
             set => {
-                '$width'  => '$1',
-                '$height' => '$2',
+                '$width'  => 'dw=$1,',
+                '$height' => 'dh=$2,',
                 '$orig'   => '$3',
             },
         },
@@ -130,12 +127,12 @@ class cdn_resizing_proxy (
     # max-height, and pads the canvas with [hex-color] to fill those sizes
     nginx::resource::location { '~* ^/(\d+)x(\d+)-pad-([0-9a-f]+)/(.+)$':
         vhost                => $vhost,
-        proxy                => "http://127.0.0.1/${resize_pad}/\${orig}",
+        proxy                => "http://127.0.0.1/${resize}/\${orig}",
         location_cfg_prepend => {
             set => {
-                '$width'  => '$1',
-                '$height' => '$2',
-                '$color'  => '$3',
+                '$width'  => 'dw=$1,cw=$1',
+                '$height' => 'dh=$2,ch=$2',
+                '$color'  => 'cc=$3',
                 '$orig'   => '$4',
             },
         },
