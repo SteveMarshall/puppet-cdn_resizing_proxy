@@ -114,8 +114,13 @@ class cdn_resizing_proxy (
     # Resizes the original image so its sides are within max-width and
     # max-height, and pads the canvas with white to fill those sizes
     nginx::resource::location { '~* ^/(\d+)x(\d+)-pad/(.+)$':
-        vhost                => $vhost,
-        proxy                => "http://127.0.0.1/\$1x\$2-pad-ffffff00/\$3",
+        vhost               => $vhost,
+        location_custom_cfg => {
+            rewrite => {
+                # HACK: Pass ffffff00 because GD alpha is inverted
+                '^/(\d+)x(\d+)-pad/(.+)$' => '/$1x$2-pad-ffffff00/$3',
+            },
+        },
     }
 
     # Matches /[max-width]x[max-height]-pad-[hex-color]/[image_path]
@@ -141,8 +146,12 @@ class cdn_resizing_proxy (
     # Supported params are documented at
     # https://github.com/cubicdaiya/ngx_small_light/wiki/Configuration
     nginx::resource::location { '~ ^/small_light[^/]*/(.+)$':
-        vhost => $vhost,
-        proxy => 'http://127.0.0.1/$1',
+        vhost               => $vhost,
+        location_custom_cfg => {
+            rewrite => {
+                '^/small_light[^/]*/(.+)$' => '/$1',
+            },
+        }
     }
 
     # Matches /product/[tizaro-sku]_[image-number][extension]
@@ -150,19 +159,15 @@ class cdn_resizing_proxy (
     $sku   = '([A-Z0-9]{3})([A-Z0-9]{3})([A-Z0-9]{2})'
     $image = '(\d+)'
     $type  = '([^$]+)'
-    $sku_image_path = "\${sku_pt_1}/\${sku_pt_2}/\${sku_pt_3}/"
-    $sku_image_name = "\${sku_pt_1}\${sku_pt_2}\${sku_pt_3}_\${img}\${ext}"
-    $sku_image_fullpath = "${sku_image_path}${sku_image_name}"
+    $sku_image_path = '$1/$2/$3/'
+    $sku_image_name = '$1$2$3_$4$5'
+    $sku_image_fullpath = "/images/${sku_image_path}${sku_image_name}"
     nginx::resource::location { "~* \"^/product/${sku}_${image}${type}$\"":
-        vhost                => $vhost,
-        proxy                => "http://127.0.0.1/images/${sku_image_fullpath}",
-        location_cfg_prepend => {
-            set => {
-                '$sku_pt_1' => '$1',
-                '$sku_pt_2' => '$2',
-                '$sku_pt_3' => '$3',
-                '$img'      => '$4',
-                '$ext'      => '$5',
+        vhost               => $vhost,
+        location_custom_cfg => {
+            rewrite => {
+                "'^/product/${sku}_${image}${type}$'"
+                => "'${sku_image_fullpath}'",
             },
         },
     }
