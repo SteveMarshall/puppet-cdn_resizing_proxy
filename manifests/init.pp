@@ -95,7 +95,7 @@ class cdn_resizing_proxy (
     # Matches /[max-width]x[max-height]-max/[image_path]
     # Resizes the original image so its sides are within max-width and
     # max-height
-    nginx::resource::location { '~* ^/(-|\d+)x(-|\d+)-max/(.+)$':
+    nginx::resource::location { '~* "^/(-|\d{1,4})x(-|\d{1,4})-max/(.+)$"':
         vhost                => $vhost,
         proxy                => "http://127.0.0.1/${resize}/\${orig}",
         location_cfg_prepend => {
@@ -110,12 +110,12 @@ class cdn_resizing_proxy (
     # Matches /[max-width]x[max-height]-pad/[image_path]
     # Resizes the original image so its sides are within max-width and
     # max-height, and pads the canvas with white to fill those sizes
-    nginx::resource::location { '~* ^/(\d+)x(\d+)-pad/(.+)$':
+    nginx::resource::location { '~* "^/(\d{1,4})x(\d{1,4})-pad/(.+)$"':
         vhost               => $vhost,
         location_custom_cfg => {
             rewrite => {
                 # HACK: Pass ffffff00 because GD alpha is inverted
-                '^/(\d+)x(\d+)-pad/(.+)$' => '/$1x$2-pad-ffffff00/$3',
+                '"^/(\d{1,4})x(\d{1,4})-pad/(.+)$"' => '/$1x$2-pad-ffffff00/$3',
             },
         },
     }
@@ -125,7 +125,7 @@ class cdn_resizing_proxy (
     #       https://github.com/cubicdaiya/ngx_small_light/issues/9
     # Resizes the original image so its sides are within max-width and
     # max-height, and pads the canvas with [hex-color] to fill those sizes
-    nginx::resource::location { '~* ^/(\d+)x(\d+)-pad-([0-9a-f]+)/(.+)$':
+    nginx::resource::location { '~* "^/(\d{1,4})x(\d{1,4})-pad-([0-9a-f]{3,8})/(.+)$"':
         vhost                => $vhost,
         proxy                => "http://127.0.0.1/${resize}/\${orig}",
         location_cfg_prepend => {
