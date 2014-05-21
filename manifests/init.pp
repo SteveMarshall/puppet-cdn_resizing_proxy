@@ -1,4 +1,4 @@
-# == Class: tizaro/cdn_resizing_proxy
+# == Class: SteveMarshall/cdn_resizing_proxy
 #
 # Install and configure a resizing proxy for use behind a CDN.
 # === Parameters
@@ -22,13 +22,13 @@ class cdn_resizing_proxy (
     $expires         = 'max'
 ) {
     # Ensure apt-get update actually runs when we `require` it
-    # If we don't do this, tizaro-nginx dependencies might fail to install
+    # If we don't do this, imagetools-nginx dependencies might fail to install
     class { 'apt':
         always_apt_update => true,
     }
     include apt::update
 
-    # Install tizaro-nginx dependencies because dpkg won't do it automatically
+    # Install imagetools-nginx dependencies because dpkg won't do it automatically
     package { 'libmagickwand4':
         require  => Exec['apt_update'],
     }
@@ -36,17 +36,17 @@ class cdn_resizing_proxy (
         require  => Exec['apt_update'],
     }
 
-    # Install tizaro-nginx from GitHub as we don't yet have our own apt repo
-    $file_name     = 'nginx_1.6.0-1.precise.tizaro-1_amd64.deb'
-    $release_path  = "v1.6.0-1-precise%2Btizaro-1/${file_name}"
-    $releases_root = 'https://github.com/Tizaro/tizaro-nginx/releases/download/'
+    # Install imagetools-nginx from GitHub as we don't yet have our own apt repo
+    $file_name     = 'nginx_1.6.0-1.precise.imagetools-1_amd64.deb'
+    $release_path  = "v1.6.0-1-precise%2Bimagetools-1/${file_name}"
+    $releases_root = 'https://github.com/SteveMarshall/imagetools-nginx/releases/download/'
     $package_path  = "/tmp/${file_name}"
 
     include wget
     wget::fetch { "${releases_root}${release_path}":
         destination => $package_path,
     }
-    package { 'nginx-tizaro':
+    package { 'nginx-imagetools':
         provider => 'dpkg',
         source   => $package_path,
         require  => [Package['libmagickwand4'], Package['libgd2-xpm']],
@@ -151,24 +151,6 @@ class cdn_resizing_proxy (
         }
     }
 
-    # Matches /product/[tizaro-sku]_[image-number][extension]
-    # Can be used with all resizers/small_light
-    $sku   = '([A-Z0-9]{3})([A-Z0-9]{3})([A-Z0-9]{2})'
-    $image = '(\d+)'
-    $type  = '([^$]+)'
-    $sku_image_path = '$1/$2/$3/'
-    $sku_image_name = '$1$2$3_$4$5'
-    $sku_image_fullpath = "/images/${sku_image_path}${sku_image_name}"
-    nginx::resource::location { "~* \"^/product/${sku}_${image}${type}$\"":
-        vhost               => $vhost,
-        location_custom_cfg => {
-            rewrite => {
-                "'^/product/${sku}_${image}${type}$'"
-                => "'${sku_image_fullpath}'",
-            },
-        },
-    }
-
     # Matches /[path]
     # Retrieves the original file from the upstream source
     $proxy_root = "${proxy_protocol}://${proxy_host}/"
@@ -181,11 +163,4 @@ class cdn_resizing_proxy (
             },
         }
     }
-}
-
-class {'cdn_resizing_proxy':
-    vhost           => 'resizer.cdn.tizaro.com',
-    proxy_protocol  => 'https',
-    proxy_host      => 's3-eu-west-1.amazonaws.com',
-    proxy_base_path => 'origin-1.cdn.tizaro.com/',
 }
